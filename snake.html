@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+  <title>Nokia Snake</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #111;
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: none;
+      user-select: none;
+      font-family: Arial, sans-serif;
+      padding: 10px 0;
+    }
+
+    /* ═══════════════════════════════════
+       PHONE SHELL — negro con tapa plateada
+    ═══════════════════════════════════ */
+    .phone {
+      width: min(240px, 88vw);
+      background: #1c1c1c;
+      border-radius: 26px 26px 22px 22px;
+      box-shadow:
+        0 0 0 1px #000,
+        0 12px 40px rgba(0,0,0,.9),
+        inset 0 1px 0 rgba(255,255,255,.07);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-bottom: 18px;
+      position: relative;
+    }
+
+    /* ── Tapa plateada superior ── */
+    .phone-top {
+      width: 100%;
+      background: linear-gradient(180deg,
+        #e8e8e8 0%, #d0d0d0 30%, #b8b8b8 60%, #c8c8c8 100%);
+      border-radius: 26px 26px 16px 16px;
+      padding: 14px 16px 12px;
+      border-bottom: 2px solid #888;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.9),
+        inset 0 -1px 0 rgba(0,0,0,.2);
+    }
+
+    /* Auricular — tres puntos */
+    .earpiece {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+      margin-bottom: 8px;
+    }
+    .earpiece span {
+      width: 5px; height: 5px;
+      background: #555;
+      border-radius: 50%;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,.6);
+    }
+
+    .nokia-logo {
+      text-align: center;
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      color: #1a1a1a;
+      font-family: 'Arial Black', Arial, sans-serif;
+    }
+
+    /* ── Pantalla ── */
+    .screen-wrap {
+      width: calc(100% - 16px);
+      margin: 10px 8px 0;
+      background: #2a2a2a;
+      border-radius: 4px;
+      padding: 4px;
+      box-shadow:
+        inset 0 2px 6px rgba(0,0,0,.8),
+        0 1px 0 rgba(255,255,255,.04);
+    }
+
+    .screen {
+      background: #b5c49a;
+      border-radius: 2px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* efecto LCD */
+    .screen::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: repeating-linear-gradient(
+        180deg, transparent 0, transparent 2px,
+        rgba(0,0,0,.05) 2px, rgba(0,0,0,.05) 3px
+      );
+      pointer-events: none; z-index: 5;
+    }
+
+    .hud {
+      display: flex;
+      justify-content: space-between;
+      padding: 2px 5px 1px;
+      font-size: 8.5px;
+      font-weight: bold;
+      color: #1a250a;
+      letter-spacing: .3px;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      image-rendering: pixelated;
+    }
+
+    /* Overlay inicio/fin/pausa */
+    .overlay {
+      position: absolute; inset: 0;
+      background: rgba(181,196,154,.93);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      z-index: 10;
+    }
+    .overlay h1 {
+      font-size: 16px; font-weight: 900;
+      color: #0f1e00; letter-spacing: 2px;
+    }
+    .overlay .sub {
+      font-size: 8.5px; color: #1e3000;
+      text-align: center; line-height: 1.6;
+    }
+    .overlay .big-score {
+      font-size: 28px; font-weight: bold; color: #0f1e00;
+    }
+
+    /* NOKIA bajo la pantalla */
+    .screen-label {
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 2.5px;
+      color: #aaa;
+      font-family: 'Arial Black', Arial, sans-serif;
+      margin: 5px 0 8px;
+      text-align: center;
+    }
+
+    /* ═══════════════════════════════════
+       ZONA DE CONTROLES
+    ═══════════════════════════════════ */
+    .controls {
+      width: calc(100% - 16px);
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    /* Fila de navegación principal */
+    .nav-row {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 0;
+      padding: 0 2px;
+    }
+
+    /* Columna izquierda: botón rojo + C */
+    .nav-left-col {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      align-items: flex-start;
+    }
+
+    /* Botón rojo circular (power / OK) */
+    .btn-red {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      border: none;
+      background: radial-gradient(circle at 38% 35%, #ff4a2a, #cc1a00);
+      box-shadow:
+        0 3px 0 #7a0000,
+        inset 0 1px 0 rgba(255,180,160,.4);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      position: relative; top: 0;
+      transition: top .08s, box-shadow .08s;
+    }
+    .btn-red:active { top: 2px; box-shadow: 0 1px 0 #7a0000, inset 0 1px 0 rgba(255,180,160,.4); }
+    .btn-red::after {
+      content: '';
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,.5);
+    }
+
+    /* Botón C */
+    .btn-c {
+      width: 34px; height: 28px;
+      border-radius: 5px;
+      border: none;
+      background: linear-gradient(180deg, #d5d5d5, #b5b5b5);
+      color: #1a1a1a;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 3px 0 #666, inset 0 1px 0 rgba(255,255,255,.7);
+      -webkit-tap-highlight-color: transparent;
+      position: relative; top: 0;
+      transition: top .08s, box-shadow .08s;
+    }
+    .btn-c:active { top: 2px; box-shadow: 0 1px 0 #666; }
+
+    /* Barra azul central */
+    .nav-center-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .blue-bar {
+      width: 52px; height: 10px;
+      background: linear-gradient(90deg, #2060d0, #60a0ff, #2060d0);
+      border-radius: 5px;
+      box-shadow: 0 1px 4px rgba(60,120,255,.5);
+      cursor: pointer;
+      border: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .blue-bar:active { filter: brightness(.8); }
+
+    /* Columna derecha: flechas arriba/abajo */
+    .nav-right-col {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      align-items: flex-end;
+    }
+
+    .btn-arrow {
+      width: 42px; height: 28px;
+      border-radius: 5px;
+      border: none;
+      background: linear-gradient(180deg, #d5d5d5, #b5b5b5);
+      color: #1a1a1a;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 3px 0 #666, inset 0 1px 0 rgba(255,255,255,.7);
+      -webkit-tap-highlight-color: transparent;
+      position: relative; top: 0;
+      transition: top .08s, box-shadow .08s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .btn-arrow:active { top: 2px; box-shadow: 0 1px 0 #666; }
+
+    /* Separador */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #444, transparent);
+      margin: 2px 4px;
+    }
+
+    /* ── Teclado numérico ── */
+    .numpad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+    }
+
+    .num-btn {
+      height: 38px;
+      border-radius: 5px;
+      border: none;
+      background: linear-gradient(180deg, #d8d8d8 0%, #b8b8b8 100%);
+      color: #1a1a1a;
+      cursor: pointer;
+      box-shadow:
+        0 3px 0 #777,
+        inset 0 1px 0 rgba(255,255,255,.8);
+      position: relative; top: 0;
+      transition: top .08s, box-shadow .08s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.1;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .num-btn:active { top: 2px; box-shadow: 0 1px 0 #777, inset 0 1px 0 rgba(255,255,255,.8); }
+
+    .num-main {
+      font-size: 15px;
+      font-weight: bold;
+      color: #111;
+    }
+    .num-letters {
+      font-size: 6.5px;
+      color: #555;
+      letter-spacing: .3px;
+    }
+    .num-btn.special .num-main {
+      font-size: 17px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+<div class="phone">
+
+  <!-- Tapa plateada -->
+  <div class="phone-top">
+    <div class="earpiece">
+      <span></span><span></span><span></span>
+    </div>
+    <div class="nokia-logo">NOKIA</div>
+  </div>
+
+  <!-- Pantalla -->
+  <div class="screen-wrap">
+    <div class="screen" id="screen">
+      <div class="hud">
+        <span>SCORE:<span id="score">0</span></span>
+        <span>LV<span id="level">1</span></span>
+        <span>HI:<span id="hi">0</span></span>
+      </div>
+      <canvas id="canvas"></canvas>
+      <div class="overlay" id="overlay">
+        <h1>Snake</h1>
+        <div class="sub">Presioná ● para jugar<br>Deslizá en pantalla</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOKIA label bajo pantalla -->
+  <div class="screen-label">NOKIA</div>
+
+  <!-- Controles -->
+  <div class="controls">
+
+    <!-- Fila nav: rojo + barra azul + flechas -->
+    <div class="nav-row">
+      <div class="nav-left-col">
+        <button class="btn-red" id="bRed" title="OK / Iniciar"></button>
+        <button class="btn-c"   id="bC">C</button>
+      </div>
+
+      <div class="nav-center-col">
+        <button class="blue-bar" id="bBlue"></button>
+      </div>
+
+      <div class="nav-right-col">
+        <button class="btn-arrow" id="bUp">∧</button>
+        <button class="btn-arrow" id="bDown">∨</button>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Teclado numérico -->
+    <div class="numpad">
+      <button class="num-btn" id="b1">
+        <span class="num-main">1</span>
+        <span class="num-letters">○○</span>
+      </button>
+      <button class="num-btn" id="b2">
+        <span class="num-main">2</span>
+        <span class="num-letters">abc</span>
+      </button>
+      <button class="num-btn" id="b3">
+        <span class="num-main">3</span>
+        <span class="num-letters">def</span>
+      </button>
+      <button class="num-btn" id="b4">
+        <span class="num-main">4</span>
+        <span class="num-letters">ghi</span>
+      </button>
+      <button class="num-btn" id="b5">
+        <span class="num-main">5</span>
+        <span class="num-letters">jkl</span>
+      </button>
+      <button class="num-btn" id="b6">
+        <span class="num-main">6</span>
+        <span class="num-letters">mno</span>
+      </button>
+      <button class="num-btn" id="b7">
+        <span class="num-main">7</span>
+        <span class="num-letters">pqrs</span>
+      </button>
+      <button class="num-btn" id="b8">
+        <span class="num-main">8</span>
+        <span class="num-letters">tuv</span>
+      </button>
+      <button class="num-btn" id="b9">
+        <span class="num-main">9</span>
+        <span class="num-letters">wxyz</span>
+      </button>
+      <button class="num-btn special" id="bStar">
+        <span class="num-main">✱</span>
+        <span class="num-letters">+</span>
+      </button>
+      <button class="num-btn" id="b0">
+        <span class="num-main">0</span>
+        <span class="num-letters">_</span>
+      </button>
+      <button class="num-btn special" id="bHash">
+        <span class="num-main">#</span>
+        <span class="num-letters">◇</span>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(() => {
+  // ── Grid ──────────────────────────────────────
+  const COLS = 20, ROWS = 15;
+  const CELL = 11;
+
+  const canvas = document.getElementById('canvas');
+  const ctx    = canvas.getContext('2d');
+  canvas.width  = COLS * CELL;
+  canvas.height = ROWS * CELL;
+
+  // Colores LCD tipo Nokia 1100
+  const C = {
+    bg:      '#b5c49a',
+    grid:    '#aaba90',
+    snake:   '#111d00',
+    snakeHL: '#2a3d0a',
+    food:    '#111d00',
+    eye:     '#b5c49a',
+  };
+
+  // ── Estado ────────────────────────────────────
+  let snake, dir, nextDir, food, score, hiScore, level;
+  let gameState = 'idle';
+  let tickTimer = null;
+
+  const SPEEDS = [230, 185, 148, 118, 95, 76, 60, 48];
+  function getSpeed() { return SPEEDS[Math.min(level-1, SPEEDS.length-1)]; }
+
+  function loadHi() { return parseInt(localStorage.getItem('nokia1100hi')||'0',10); }
+  function saveHi(v){ localStorage.setItem('nokia1100hi', v); }
+
+  hiScore = loadHi();
+  refreshHiDisplay();
+
+  // ── Init ──────────────────────────────────────
+  function init() {
+    const cx = Math.floor(COLS/2), cy = Math.floor(ROWS/2);
+    snake   = [{x:cx,y:cy},{x:cx-1,y:cy},{x:cx-2,y:cy}];
+    dir     = {x:1,y:0};
+    nextDir = {x:1,y:0};
+    score   = 0; level = 1;
+    placeFood();
+    refreshHUD();
+  }
+
+  function placeFood() {
+    const occ = new Set(snake.map(s=>`${s.x},${s.y}`));
+    let f;
+    do { f={x:rnd(0,COLS-1),y:rnd(0,ROWS-1)}; }
+    while(occ.has(`${f.x},${f.y}`));
+    food = f;
+  }
+
+  function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+
+  // ── Loop ──────────────────────────────────────
+  function startLoop() {
+    clearInterval(tickTimer);
+    tickTimer = setInterval(tick, getSpeed());
+  }
+
+  function tick() {
+    if (gameState !== 'running') return;
+    dir = nextDir;
+    const head = {
+      x: (snake[0].x + dir.x + COLS) % COLS,
+      y: (snake[0].y + dir.y + ROWS) % ROWS,
+    };
+    if (snake.some(s => s.x===head.x && s.y===head.y)) { die(); return; }
+    snake.unshift(head);
+    if (head.x===food.x && head.y===food.y) {
+      score++;
+      level = Math.floor(score/5)+1;
+      if (score > hiScore) { hiScore=score; saveHi(hiScore); refreshHiDisplay(); }
+      placeFood();
+      refreshHUD();
+      startLoop();
+    } else {
+      snake.pop();
+    }
+    draw();
+  }
+
+  function die() {
+    gameState = 'dead';
+    clearInterval(tickTimer);
+    let n = 4;
+    const blink = () => {
+      if (n-- <= 0) { showOverlay('dead'); return; }
+      ctx.fillStyle = n%2===0 ? 'rgba(181,196,154,.6)' : 'transparent';
+      draw();
+      if (n%2===0) { ctx.fillStyle='rgba(181,196,154,.6)'; ctx.fillRect(0,0,canvas.width,canvas.height); }
+      setTimeout(blink, 160);
+    };
+    blink();
+  }
+
+  // ── Dibujo ────────────────────────────────────
+  function draw() {
+    ctx.fillStyle = C.bg;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    ctx.strokeStyle = C.grid;
+    ctx.lineWidth = 0.3;
+    for(let x=0;x<=COLS;x++){ctx.beginPath();ctx.moveTo(x*CELL,0);ctx.lineTo(x*CELL,canvas.height);ctx.stroke();}
+    for(let y=0;y<=ROWS;y++){ctx.beginPath();ctx.moveTo(0,y*CELL);ctx.lineTo(canvas.width,y*CELL);ctx.stroke();}
+
+    drawFood();
+    for(let i=snake.length-1;i>=0;i--) drawSeg(snake[i], i===0);
+  }
+
+  function drawSeg(s, head) {
+    const x=s.x*CELL, y=s.y*CELL, p=1, sz=CELL-p*2;
+    ctx.fillStyle = C.snake;
+    ctx.fillRect(x+p,y+p,sz,sz);
+    ctx.fillStyle = C.snakeHL;
+    ctx.fillRect(x+p+1,y+p+1,2,1);
+    ctx.fillRect(x+p+1,y+p+1,1,2);
+    if (head) {
+      ctx.fillStyle = C.eye;
+      const h = sz;
+      if      (dir.x===1)  { ctx.fillRect(x+p+h-2,y+p+2,2,2); ctx.fillRect(x+p+h-2,y+p+h-4,2,2); }
+      else if (dir.x===-1) { ctx.fillRect(x+p+1,  y+p+2,2,2); ctx.fillRect(x+p+1,  y+p+h-4,2,2); }
+      else if (dir.y===-1) { ctx.fillRect(x+p+2,  y+p+1,2,2); ctx.fillRect(x+p+h-4,y+p+1,  2,2); }
+      else                 { ctx.fillRect(x+p+2,  y+p+h-2,2,2);ctx.fillRect(x+p+h-4,y+p+h-2,2,2);}
+    }
+  }
+
+  function drawFood() {
+    const x=food.x*CELL, y=food.y*CELL, m=Math.floor(CELL/2);
+    ctx.fillStyle = C.food;
+    ctx.fillRect(x+2,y+2,CELL-4,CELL-4);
+    ctx.fillStyle = C.bg;
+    ctx.fillRect(x+4,y+4,CELL-8,CELL-8);
+    ctx.fillStyle = C.food;
+    ctx.fillRect(x+m-1,y+m-1,2,2);
+  }
+
+  // ── HUD ───────────────────────────────────────
+  function refreshHUD() {
+    document.getElementById('score').textContent = score;
+    document.getElementById('level').textContent = level;
+  }
+  function refreshHiDisplay() {
+    document.getElementById('hi').textContent = hiScore;
+  }
+
+  // ── Overlays ──────────────────────────────────
+  const overlay = document.getElementById('overlay');
+  function showOverlay(t) {
+    overlay.style.display='flex';
+    if (t==='start') {
+      overlay.innerHTML=`<h1>Snake</h1><div class="sub">Presioná ● para jugar<br>Deslizá en pantalla</div>`;
+    } else if (t==='dead') {
+      const rec = score===hiScore && score>0;
+      overlay.innerHTML=`
+        <h1>Game Over</h1>
+        <div class="big-score">${score}</div>
+        ${rec?'<div class="sub">🏆 ¡Récord!</div>':''}
+        <div class="sub">Récord: ${hiScore}</div>
+        <div class="sub" style="margin-top:4px;font-size:7.5px;">● = jugar de nuevo</div>`;
+    } else if (t==='pause') {
+      overlay.innerHTML=`<h1>Pausa</h1><div class="sub">● o C para continuar</div>`;
+    }
+  }
+  function hideOverlay() { overlay.style.display='none'; }
+
+  // ── Acciones ──────────────────────────────────
+  function tryStart() {
+    if (gameState==='idle'||gameState==='dead') {
+      init(); gameState='running'; hideOverlay(); startLoop(); draw();
+    } else if (gameState==='paused') {
+      gameState='running'; hideOverlay(); startLoop();
+    }
+  }
+
+  function togglePause() {
+    if (gameState==='running') {
+      gameState='paused'; clearInterval(tickTimer); showOverlay('pause');
+    } else if (gameState==='paused') {
+      gameState='running'; hideOverlay(); startLoop();
+    }
+  }
+
+  function setDir(dx,dy) {
+    if (dx===-dir.x && dy===-dir.y) return;
+    nextDir={x:dx,y:dy};
+    if (gameState!=='running') tryStart();
+  }
+
+  // ── Teclado físico ────────────────────────────
+  document.addEventListener('keydown', e => {
+    if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
+    switch(e.key){
+      case 'ArrowUp':   case 'w': setDir(0,-1); break;
+      case 'ArrowDown': case 's': setDir(0, 1); break;
+      case 'ArrowLeft': case 'a': setDir(-1,0); break;
+      case 'ArrowRight':case 'd': setDir(1, 0); break;
+      case 'Enter': case ' ':     tryStart();   break;
+      case 'p':                   togglePause();break;
+    }
+  });
+
+  // ── Botones ───────────────────────────────────
+  document.getElementById('bRed').addEventListener('click', tryStart);
+  document.getElementById('bBlue').addEventListener('click', tryStart);
+  document.getElementById('bC').addEventListener('click', togglePause);
+  document.getElementById('bUp').addEventListener('click', () => setDir(0,-1));
+  document.getElementById('bDown').addEventListener('click', () => setDir(0, 1));
+
+  // Numérico: 2/4/6/8 para dirección (clásico Nokia)
+  document.getElementById('b2').addEventListener('click', () => setDir(0,-1));
+  document.getElementById('b4').addEventListener('click', () => setDir(-1,0));
+  document.getElementById('b6').addEventListener('click', () => setDir(1, 0));
+  document.getElementById('b8').addEventListener('click', () => setDir(0, 1));
+  document.getElementById('b5').addEventListener('click', tryStart);
+
+  // * = bajar velocidad, # = subir velocidad
+  document.getElementById('bStar').addEventListener('click', () => {
+    if(level>1){level--;refreshHUD();if(gameState==='running')startLoop();}
+  });
+  document.getElementById('bHash').addEventListener('click', () => {
+    if(level<SPEEDS.length){level++;refreshHUD();if(gameState==='running')startLoop();}
+  });
+
+  // ── Swipe en pantalla ─────────────────────────
+  let t0=null;
+  const scr=document.getElementById('screen');
+  scr.addEventListener('touchstart',e=>{e.preventDefault();t0={x:e.touches[0].clientX,y:e.touches[0].clientY};},{passive:false});
+  scr.addEventListener('touchend',e=>{
+    e.preventDefault();
+    if(!t0) return;
+    const dx=e.changedTouches[0].clientX-t0.x, dy=e.changedTouches[0].clientY-t0.y;
+    t0=null;
+    if(Math.abs(dx)<12&&Math.abs(dy)<12){tryStart();return;}
+    if(Math.abs(dx)>Math.abs(dy)) setDir(dx>0?1:-1,0);
+    else                           setDir(0,dy>0?1:-1);
+  },{passive:false});
+
+  // ── Arranque ──────────────────────────────────
+  init(); draw(); showOverlay('start');
+})();
+</script>
+</body>
+</html>
