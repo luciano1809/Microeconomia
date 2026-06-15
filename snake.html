@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Víbora Nokia</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #4a5240;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100dvh;
+      font-family: 'Courier New', monospace;
+      touch-action: none;
+      user-select: none;
+    }
+
+    /* ── Nokia phone shell ── */
+    .phone {
+      background: #2b2b2b;
+      border-radius: 24px 24px 40px 40px;
+      padding: 16px 14px 28px;
+      width: min(320px, 94vw);
+      box-shadow:
+        0 8px 32px rgba(0,0,0,.7),
+        inset 0 1px 0 rgba(255,255,255,.08);
+    }
+
+    /* speaker grille */
+    .speaker {
+      display: flex;
+      justify-content: center;
+      gap: 3px;
+      margin-bottom: 10px;
+    }
+    .speaker span {
+      width: 3px; height: 14px;
+      background: #1a1a1a;
+      border-radius: 2px;
+    }
+
+    /* ── LCD screen ── */
+    .screen-bezel {
+      background: #1c1c1c;
+      border-radius: 8px;
+      padding: 6px;
+      margin-bottom: 14px;
+    }
+    .screen {
+      background: #8fa67a;
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+    /* scanline effect */
+    .screen::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 3px,
+        rgba(0,0,0,.04) 3px,
+        rgba(0,0,0,.04) 4px
+      );
+      pointer-events: none;
+    }
+
+    .hud {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 8px 2px;
+      font-size: 11px;
+      color: #2a3a1a;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      image-rendering: pixelated;
+    }
+
+    /* overlay for start / game over */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(143, 166, 122, .88);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      z-index: 10;
+    }
+    .overlay h1 {
+      font-size: 20px;
+      color: #1a2a0a;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .overlay .sub {
+      font-size: 11px;
+      color: #2a3a1a;
+      text-align: center;
+      line-height: 1.6;
+    }
+    .overlay .score-big {
+      font-size: 28px;
+      color: #1a2a0a;
+      font-weight: bold;
+    }
+
+    /* ── Keypad ── */
+    .keypad {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dpad {
+      display: grid;
+      grid-template-areas:
+        ". up ."
+        "left ok right"
+        ". down .";
+      gap: 4px;
+    }
+
+    .btn {
+      width: 52px;
+      height: 52px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      transition: filter .1s;
+      background: #3a3a3a;
+      color: #ccc;
+      box-shadow: 0 3px 0 #1a1a1a;
+      position: relative;
+      top: 0;
+    }
+    .btn:active {
+      top: 3px;
+      box-shadow: 0 0 0 #1a1a1a;
+      filter: brightness(.8);
+    }
+    .btn-up    { grid-area: up; }
+    .btn-left  { grid-area: left; }
+    .btn-ok    { grid-area: ok; background: #556b40; color: #c8e0a8; border-radius: 50%; }
+    .btn-right { grid-area: right; }
+    .btn-down  { grid-area: down; }
+
+    .num-row {
+      display: flex;
+      gap: 6px;
+    }
+    .btn-num {
+      width: 52px;
+      height: 36px;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+
+    /* high score label */
+    .hs-label {
+      font-size: 10px;
+      color: #888;
+      text-align: center;
+      margin-top: 6px;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="speaker">
+    <span></span><span></span><span></span><span></span><span></span>
+  </div>
+
+  <div class="screen-bezel">
+    <div class="screen" id="screen">
+      <div class="hud">
+        <span id="score-label">SCORE: <span id="score">0</span></span>
+        <span id="level-label">LVL: <span id="level">1</span></span>
+        <span id="hi-label">HI: <span id="hi">0</span></span>
+      </div>
+      <canvas id="canvas"></canvas>
+
+      <div class="overlay" id="overlay">
+        <h1>🐍 Víbora</h1>
+        <div class="sub">Presiona ▶ o el centro<br>para comenzar</div>
+        <div class="sub" style="font-size:9px;margin-top:4px;">
+          También podés deslizar en la pantalla
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="keypad">
+    <div class="dpad">
+      <button class="btn btn-up"    id="bUp">▲</button>
+      <button class="btn btn-left"  id="bLeft">◀</button>
+      <button class="btn btn-ok"    id="bOk">▶</button>
+      <button class="btn btn-right" id="bRight">▶</button>
+      <button class="btn btn-down"  id="bDown">▼</button>
+    </div>
+    <div class="num-row">
+      <button class="btn btn-num" id="bSlow">🐢</button>
+      <button class="btn btn-num" id="bPause">⏸</button>
+      <button class="btn btn-num" id="bFast">🐇</button>
+    </div>
+  </div>
+  <div class="hs-label" id="hs-label">HIGH SCORE: <span id="hi2">0</span></div>
+</div>
+
+<script>
+(() => {
+  // ── Grid config ──────────────────────────────────────────
+  const COLS = 21, ROWS = 18;
+  const CELL = 13; // px per cell on the canvas
+
+  const canvas = document.getElementById('canvas');
+  const ctx    = canvas.getContext('2d');
+  canvas.width  = COLS * CELL;
+  canvas.height = ROWS * CELL;
+
+  // Colors — Nokia greenish palette
+  const C = {
+    bg:       '#8fa67a',
+    grid:     '#839b70',
+    snake:    '#1e2e0e',
+    snakeEye: '#8fa67a',
+    food:     '#1e2e0e',
+    foodDot:  '#8fa67a',
+    wall:     '#2a3a1a',
+    text:     '#1e2e0e',
+  };
+
+  // ── State ─────────────────────────────────────────────────
+  let snake, dir, nextDir, food, score, hiScore, level, speed;
+  let gameState = 'idle'; // idle | running | paused | dead
+  let tickTimer = null;
+
+  const SPEEDS = [200, 160, 130, 105, 85, 68, 55]; // ms per tick per level
+
+  function getSpeed() {
+    return SPEEDS[Math.min(level - 1, SPEEDS.length - 1)];
+  }
+
+  function loadHi() {
+    return parseInt(localStorage.getItem('snakeHi') || '0', 10);
+  }
+  function saveHi(v) {
+    localStorage.setItem('snakeHi', v);
+  }
+
+  hiScore = loadHi();
+  updateHiDisplay();
+
+  // ── Init / Reset ──────────────────────────────────────────
+  function init() {
+    const cx = Math.floor(COLS / 2), cy = Math.floor(ROWS / 2);
+    snake   = [{x: cx, y: cy}, {x: cx-1, y: cy}, {x: cx-2, y: cy}];
+    dir     = {x: 1, y: 0};
+    nextDir = {x: 1, y: 0};
+    score   = 0;
+    level   = 1;
+    placeFood();
+    updateScoreDisplay();
+  }
+
+  function placeFood() {
+    const occupied = new Set(snake.map(s => `${s.x},${s.y}`));
+    let f;
+    do {
+      f = {x: rnd(0, COLS-1), y: rnd(0, ROWS-1)};
+    } while (occupied.has(`${f.x},${f.y}`));
+    food = f;
+  }
+
+  function rnd(a, b) {
+    return Math.floor(Math.random() * (b - a + 1)) + a;
+  }
+
+  // ── Game loop ─────────────────────────────────────────────
+  function startLoop() {
+    clearInterval(tickTimer);
+    tickTimer = setInterval(tick, getSpeed());
+  }
+
+  function tick() {
+    if (gameState !== 'running') return;
+
+    dir = nextDir;
+    const head = {x: snake[0].x + dir.x, y: snake[0].y + dir.y};
+
+    // Wall collision — wrap around
+    head.x = (head.x + COLS) % COLS;
+    head.y = (head.y + ROWS) % ROWS;
+
+    // Self collision
+    if (snake.some(s => s.x === head.x && s.y === head.y)) {
+      die();
+      return;
+    }
+
+    snake.unshift(head);
+
+    if (head.x === food.x && head.y === food.y) {
+      score++;
+      level = Math.floor(score / 5) + 1;
+      startLoop(); // reset timer for new speed
+      placeFood();
+      updateScoreDisplay();
+      if (score > hiScore) { hiScore = score; saveHi(hiScore); updateHiDisplay(); }
+    } else {
+      snake.pop();
+    }
+
+    draw();
+  }
+
+  function die() {
+    gameState = 'dead';
+    clearInterval(tickTimer);
+    drawDead();
+    showOverlay('dead');
+  }
+
+  // ── Drawing ───────────────────────────────────────────────
+  function draw() {
+    ctx.fillStyle = C.bg;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // subtle grid
+    ctx.strokeStyle = C.grid;
+    ctx.lineWidth = 0.3;
+    for (let x = 0; x <= COLS; x++) { ctx.beginPath(); ctx.moveTo(x*CELL,0); ctx.lineTo(x*CELL,canvas.height); ctx.stroke(); }
+    for (let y = 0; y <= ROWS; y++) { ctx.beginPath(); ctx.moveTo(0,y*CELL); ctx.lineTo(canvas.width,y*CELL); ctx.stroke(); }
+
+    // food — filled square with dot
+    drawFood();
+
+    // snake
+    for (let i = 0; i < snake.length; i++) {
+      drawSegment(snake[i], i === 0);
+    }
+  }
+
+  function drawSegment(seg, isHead) {
+    const x = seg.x * CELL + 1, y = seg.y * CELL + 1;
+    const s = CELL - 2;
+    ctx.fillStyle = C.snake;
+    ctx.fillRect(x, y, s, s);
+
+    if (isHead) {
+      // eyes
+      ctx.fillStyle = C.snakeEye;
+      const ex = dir.x === 1 ? x+s-3 : dir.x === -1 ? x+1 : null;
+      const ey = dir.y === 1 ? y+s-3 : dir.y === -1 ? y+1 : null;
+      const ex2 = ex, ey2 = ey;
+
+      if (dir.x !== 0) {
+        ctx.fillRect(ex ?? x+2, y+2, 2, 2);
+        ctx.fillRect(ex2 ?? x+2, y+s-4, 2, 2);
+      } else {
+        ctx.fillRect(x+2, ey ?? y+2, 2, 2);
+        ctx.fillRect(x+s-4, ey2 ?? y+2, 2, 2);
+      }
+    }
+  }
+
+  function drawFood() {
+    const x = food.x * CELL + 2, y = food.y * CELL + 2;
+    const s = CELL - 4;
+    ctx.fillStyle = C.food;
+    ctx.fillRect(x, y, s, s);
+    ctx.fillStyle = C.foodDot;
+    const mid = Math.floor(s/2);
+    ctx.fillRect(x+mid-1, y+mid-1, 2, 2);
+  }
+
+  function drawDead() {
+    draw();
+    ctx.fillStyle = 'rgba(143,166,122,.6)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = C.text;
+    ctx.font = `bold ${CELL+2}px 'Courier New'`;
+    ctx.textAlign = 'center';
+    ctx.fillText('GAME OVER', canvas.width/2, canvas.height/2);
+  }
+
+  // ── HUD ───────────────────────────────────────────────────
+  function updateScoreDisplay() {
+    document.getElementById('score').textContent  = score;
+    document.getElementById('level').textContent  = level;
+  }
+  function updateHiDisplay() {
+    document.getElementById('hi').textContent  = hiScore;
+    document.getElementById('hi2').textContent = hiScore;
+  }
+
+  // ── Overlay ───────────────────────────────────────────────
+  const overlay = document.getElementById('overlay');
+
+  function showOverlay(type) {
+    overlay.style.display = 'flex';
+    overlay.innerHTML = '';
+    if (type === 'start') {
+      overlay.innerHTML = `
+        <h1>🐍 Víbora</h1>
+        <div class="sub">Presiona ▶ o el centro<br>para comenzar</div>
+        <div class="sub" style="font-size:9px;margin-top:4px;">También podés deslizar en la pantalla</div>`;
+    } else if (type === 'dead') {
+      overlay.innerHTML = `
+        <h1>FIN</h1>
+        <div class="score-big">${score}</div>
+        <div class="sub">Puntaje${score > 0 && score === hiScore ? ' 🏆 ¡Récord!' : ''}</div>
+        <div class="sub" style="margin-top:6px;">Presioná el centro para jugar de nuevo</div>`;
+    } else if (type === 'pause') {
+      overlay.innerHTML = `<h1>PAUSA</h1><div class="sub">Presioná ⏸ para continuar</div>`;
+    }
+  }
+
+  function hideOverlay() {
+    overlay.style.display = 'none';
+  }
+
+  // ── Controls ──────────────────────────────────────────────
+  function tryStart() {
+    if (gameState === 'idle' || gameState === 'dead') {
+      init();
+      gameState = 'running';
+      hideOverlay();
+      startLoop();
+      draw();
+    } else if (gameState === 'paused') {
+      gameState = 'running';
+      hideOverlay();
+      startLoop();
+    }
+  }
+
+  function togglePause() {
+    if (gameState === 'running') {
+      gameState = 'paused';
+      clearInterval(tickTimer);
+      showOverlay('pause');
+    } else if (gameState === 'paused') {
+      gameState = 'running';
+      hideOverlay();
+      startLoop();
+    }
+  }
+
+  function setDir(dx, dy) {
+    // prevent reversing
+    if (dx === -dir.x && dy === -dir.y) return;
+    nextDir = {x: dx, y: dy};
+    if (gameState !== 'running') tryStart();
+  }
+
+  // Keyboard
+  document.addEventListener('keydown', e => {
+    switch(e.key) {
+      case 'ArrowUp':    case 'w': case 'W': e.preventDefault(); setDir(0,-1); break;
+      case 'ArrowDown':  case 's': case 'S': e.preventDefault(); setDir(0, 1); break;
+      case 'ArrowLeft':  case 'a': case 'A': e.preventDefault(); setDir(-1,0); break;
+      case 'ArrowRight': case 'd': case 'D': e.preventDefault(); setDir(1, 0); break;
+      case 'Enter': case ' ':                e.preventDefault(); tryStart();   break;
+      case 'p': case 'P':                    e.preventDefault(); togglePause(); break;
+    }
+  });
+
+  // D-pad buttons
+  document.getElementById('bUp').addEventListener('click',    () => setDir(0,-1));
+  document.getElementById('bDown').addEventListener('click',  () => setDir(0, 1));
+  document.getElementById('bLeft').addEventListener('click',  () => setDir(-1,0));
+  document.getElementById('bRight').addEventListener('click', () => setDir(1, 0));
+  document.getElementById('bOk').addEventListener('click',    tryStart);
+  document.getElementById('bPause').addEventListener('click', togglePause);
+
+  // Speed buttons
+  document.getElementById('bSlow').addEventListener('click', () => {
+    if (level > 1) { level--; updateScoreDisplay(); if (gameState==='running') startLoop(); }
+  });
+  document.getElementById('bFast').addEventListener('click', () => {
+    if (level < SPEEDS.length) { level++; updateScoreDisplay(); if (gameState==='running') startLoop(); }
+  });
+
+  // Touch swipe on canvas
+  let touchStart = null;
+  const screen = document.getElementById('screen');
+
+  screen.addEventListener('touchstart', e => {
+    e.preventDefault();
+    touchStart = {x: e.touches[0].clientX, y: e.touches[0].clientY};
+  }, {passive: false});
+
+  screen.addEventListener('touchend', e => {
+    e.preventDefault();
+    if (!touchStart) return;
+    const dx = e.changedTouches[0].clientX - touchStart.x;
+    const dy = e.changedTouches[0].clientY - touchStart.y;
+    touchStart = null;
+    const absDx = Math.abs(dx), absDy = Math.abs(dy);
+    const threshold = 15;
+    if (absDx < threshold && absDy < threshold) { tryStart(); return; }
+    if (absDx > absDy) { setDir(dx > 0 ? 1 : -1, 0); }
+    else               { setDir(0, dy > 0 ? 1 : -1); }
+  }, {passive: false});
+
+  // ── Initial draw ──────────────────────────────────────────
+  init();
+  draw();
+  showOverlay('start');
+
+})();
+</script>
+</body>
+</html>
