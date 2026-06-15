@@ -3,83 +3,130 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Víbora Nokia</title>
+  <title>Nokia Snake</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      background: #4a5240;
+      background: radial-gradient(ellipse at center, #2c3e50 0%, #1a252f 100%);
+      min-height: 100dvh;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: 100dvh;
-      font-family: 'Courier New', monospace;
+      font-family: 'Arial Narrow', Arial, sans-serif;
       touch-action: none;
       user-select: none;
+      padding: 12px 0;
     }
 
-    /* ── Nokia phone shell ── */
+    /* ══════════════════════════════════════
+       PHONE SHELL — Nokia 1100 style
+    ══════════════════════════════════════ */
     .phone {
-      background: #2b2b2b;
-      border-radius: 24px 24px 40px 40px;
-      padding: 16px 14px 28px;
-      width: min(320px, 94vw);
+      width: min(290px, 92vw);
+      background: linear-gradient(170deg, #1e3a6e 0%, #162d58 40%, #0f2040 100%);
+      border-radius: 22px 22px 28px 28px;
+      padding: 0 0 20px;
       box-shadow:
-        0 8px 32px rgba(0,0,0,.7),
-        inset 0 1px 0 rgba(255,255,255,.08);
+        0 0 0 1px rgba(255,255,255,.06),
+        0 2px 0 rgba(255,255,255,.12),
+        inset 0 1px 0 rgba(255,255,255,.15),
+        0 20px 60px rgba(0,0,0,.8),
+        0 4px 16px rgba(0,0,0,.6);
+      position: relative;
     }
 
-    /* speaker grille */
-    .speaker {
-      display: flex;
-      justify-content: center;
-      gap: 3px;
-      margin-bottom: 10px;
-    }
-    .speaker span {
-      width: 3px; height: 14px;
-      background: #1a1a1a;
-      border-radius: 2px;
+    /* Side grip texture lines */
+    .phone::before {
+      content: '';
+      position: absolute;
+      left: 0; right: 0; top: 60px; bottom: 60px;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px, transparent 3px,
+        rgba(0,0,0,.15) 3px, rgba(0,0,0,.15) 4px
+      );
+      border-left: 3px solid rgba(0,0,0,.3);
+      border-right: 3px solid rgba(0,0,0,.3);
+      pointer-events: none;
     }
 
-    /* ── LCD screen ── */
-    .screen-bezel {
-      background: #1c1c1c;
-      border-radius: 8px;
-      padding: 6px;
-      margin-bottom: 14px;
+    /* ── Top cap ── */
+    .phone-top {
+      background: linear-gradient(180deg, #2a4a82 0%, #1e3a6e 100%);
+      border-radius: 22px 22px 0 0;
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid rgba(0,0,0,.3);
     }
-    .screen {
-      background: #8fa67a;
-      border-radius: 4px;
+
+    .earpiece {
+      width: 50px;
+      height: 6px;
+      background: #0a1628;
+      border-radius: 3px;
+      margin: 0 auto 10px;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,.8);
       position: relative;
       overflow: hidden;
     }
-    /* scanline effect */
+    .earpiece::after {
+      content: '';
+      position: absolute;
+      inset: 1px 4px;
+      background: repeating-linear-gradient(
+        90deg, transparent 0, transparent 2px, rgba(255,255,255,.05) 2px, rgba(255,255,255,.05) 3px
+      );
+    }
+
+    .nokia-logo {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 4px;
+      color: rgba(255,255,255,.85);
+      text-transform: uppercase;
+      font-family: 'Arial Black', Arial, sans-serif;
+      text-shadow: 0 1px 3px rgba(0,0,0,.5);
+    }
+
+    /* ── Screen bezel ── */
+    .screen-bezel {
+      background: #080c14;
+      margin: 0 14px;
+      border-radius: 6px;
+      padding: 5px;
+      box-shadow:
+        inset 0 2px 8px rgba(0,0,0,.9),
+        0 1px 0 rgba(255,255,255,.05);
+    }
+
+    .screen {
+      background: #8bac0f;
+      border-radius: 3px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* LCD pixel grid overlay */
     .screen::after {
       content: '';
       position: absolute;
       inset: 0;
-      background: repeating-linear-gradient(
-        to bottom,
-        transparent 0px,
-        transparent 3px,
-        rgba(0,0,0,.04) 3px,
-        rgba(0,0,0,.04) 4px
-      );
+      background:
+        repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(0,0,0,.06) 2px, rgba(0,0,0,.06) 3px),
+        repeating-linear-gradient(90deg, transparent 0px, transparent 2px, rgba(0,0,0,.04) 2px, rgba(0,0,0,.04) 3px);
       pointer-events: none;
+      z-index: 5;
     }
 
     .hud {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      padding: 4px 8px 2px;
-      font-size: 11px;
-      color: #2a3a1a;
+      padding: 3px 6px 1px;
+      font-size: 9px;
       font-weight: bold;
-      letter-spacing: 1px;
+      color: #1a2a00;
+      letter-spacing: .5px;
     }
 
     canvas {
@@ -88,217 +135,368 @@
       image-rendering: pixelated;
     }
 
-    /* overlay for start / game over */
     .overlay {
       position: absolute;
       inset: 0;
-      background: rgba(143, 166, 122, .88);
+      background: rgba(139, 172, 15, .92);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 6px;
       z-index: 10;
     }
     .overlay h1 {
-      font-size: 20px;
-      color: #1a2a0a;
+      font-size: 17px;
+      font-weight: 900;
+      color: #1a2a00;
       letter-spacing: 2px;
       text-transform: uppercase;
     }
     .overlay .sub {
-      font-size: 11px;
-      color: #2a3a1a;
+      font-size: 9.5px;
+      color: #2a3a00;
       text-align: center;
       line-height: 1.6;
     }
     .overlay .score-big {
-      font-size: 28px;
-      color: #1a2a0a;
+      font-size: 30px;
       font-weight: bold;
+      color: #1a2a00;
+    }
+    .overlay .record {
+      font-size: 9px;
+      color: #3a5000;
     }
 
-    /* ── Keypad ── */
+    /* ══════════════════════════════════════
+       KEYPAD AREA
+    ══════════════════════════════════════ */
     .keypad {
+      padding: 0 12px;
+      margin-top: 10px;
       display: flex;
       flex-direction: column;
+      gap: 7px;
+    }
+
+    /* ── Soft keys row ── */
+    .soft-row {
+      display: flex;
+      justify-content: space-between;
       align-items: center;
       gap: 6px;
     }
 
-    .dpad {
-      display: grid;
-      grid-template-areas:
-        ". up ."
-        "left ok right"
-        ". down .";
-      gap: 4px;
+    .soft-btn {
+      flex: 1;
+      height: 28px;
+      background: linear-gradient(180deg, #254070 0%, #1a2e52 100%);
+      border: none;
+      border-radius: 5px;
+      color: rgba(255,255,255,.75);
+      font-size: 9px;
+      letter-spacing: .5px;
+      cursor: pointer;
+      box-shadow: 0 3px 0 #0a1628, inset 0 1px 0 rgba(255,255,255,.1);
+      position: relative;
+      top: 0;
+      transition: top .08s, box-shadow .08s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .soft-btn:active { top: 2px; box-shadow: 0 1px 0 #0a1628, inset 0 1px 0 rgba(255,255,255,.1); }
+
+    /* ── Navigation cross ── */
+    .nav-area {
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .btn {
-      width: 52px;
-      height: 52px;
-      border-radius: 8px;
+    .nav-cross {
+      position: relative;
+      width: 110px;
+      height: 110px;
+    }
+
+    /* outer ring */
+    .nav-cross::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #2a4878 0%, #172840 100%);
+      box-shadow:
+        0 4px 0 #0a1628,
+        inset 0 1px 0 rgba(255,255,255,.15),
+        0 0 0 2px rgba(0,0,0,.4);
+    }
+
+    .nav-btn {
+      position: absolute;
+      background: transparent;
       border: none;
+      color: rgba(255,255,255,.8);
+      font-size: 11px;
       cursor: pointer;
-      font-size: 18px;
-      font-weight: bold;
       display: flex;
       align-items: center;
       justify-content: center;
       -webkit-tap-highlight-color: transparent;
-      transition: filter .1s;
-      background: #3a3a3a;
-      color: #ccc;
-      box-shadow: 0 3px 0 #1a1a1a;
+      z-index: 2;
+    }
+    .nav-btn:active { filter: brightness(.7); }
+
+    .nav-up    { top: 4px;  left: 50%; transform: translateX(-50%); width: 36px; height: 36px; }
+    .nav-down  { bottom: 4px; left: 50%; transform: translateX(-50%); width: 36px; height: 36px; }
+    .nav-left  { left: 4px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; }
+    .nav-right { right: 4px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; }
+
+    /* center OK button */
+    .nav-ok {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #3a5a8a 0%, #1e3562 100%);
+      border: none;
+      color: rgba(255,255,255,.9);
+      font-size: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow:
+        0 3px 0 #0a1628,
+        inset 0 1px 0 rgba(255,255,255,.2),
+        0 0 0 3px #0f1e38;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      letter-spacing: .5px;
+      -webkit-tap-highlight-color: transparent;
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      transition: transform .08s, box-shadow .08s;
+    }
+    .nav-ok:active {
+      transform: translate(-50%, calc(-50% + 2px));
+      box-shadow: 0 1px 0 #0a1628, inset 0 1px 0 rgba(255,255,255,.2), 0 0 0 3px #0f1e38;
+    }
+
+    /* ── Call keys row ── */
+    .call-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .call-btn {
+      flex: 1;
+      height: 30px;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 3px 0 rgba(0,0,0,.5);
+      -webkit-tap-highlight-color: transparent;
       position: relative;
       top: 0;
+      transition: top .08s, box-shadow .08s;
     }
-    .btn:active {
-      top: 3px;
-      box-shadow: 0 0 0 #1a1a1a;
-      filter: brightness(.8);
-    }
-    .btn-up    { grid-area: up; }
-    .btn-left  { grid-area: left; }
-    .btn-ok    { grid-area: ok; background: #556b40; color: #c8e0a8; border-radius: 50%; }
-    .btn-right { grid-area: right; }
-    .btn-down  { grid-area: down; }
+    .call-btn:active { top: 2px; box-shadow: 0 1px 0 rgba(0,0,0,.5); }
 
-    .num-row {
-      display: flex;
-      gap: 6px;
+    .btn-call  { background: linear-gradient(180deg, #2e7d32 0%, #1b5e20 100%); }
+    .btn-end   { background: linear-gradient(180deg, #c62828 0%, #8b0000 100%); }
+
+    /* ── Numeric keypad ── */
+    .numpad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
     }
-    .btn-num {
-      width: 52px;
+
+    .num-btn {
       height: 36px;
+      background: linear-gradient(180deg, #1e3a6e 0%, #162d58 100%);
+      border: none;
       border-radius: 6px;
-      font-size: 12px;
+      color: rgba(255,255,255,.8);
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow:
+        0 3px 0 #0a1628,
+        inset 0 1px 0 rgba(255,255,255,.1);
+      position: relative;
+      top: 0;
+      transition: top .08s, box-shadow .08s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .num-btn:active { top: 2px; box-shadow: 0 1px 0 #0a1628, inset 0 1px 0 rgba(255,255,255,.1); }
+    .num-btn .sub-letters {
+      font-size: 6px;
+      color: rgba(255,255,255,.4);
+      letter-spacing: .5px;
+    }
+    .num-btn.special {
+      font-size: 16px;
+      color: rgba(255,255,255,.6);
     }
 
-    /* high score label */
-    .hs-label {
-      font-size: 10px;
-      color: #888;
+    /* Nokia bottom brand */
+    .nokia-bottom {
       text-align: center;
-      margin-top: 6px;
-      letter-spacing: 1px;
+      margin-top: 14px;
+      font-size: 8px;
+      letter-spacing: 3px;
+      color: rgba(255,255,255,.25);
+      font-family: 'Arial Black', Arial, sans-serif;
+      font-weight: 900;
     }
   </style>
 </head>
 <body>
-
 <div class="phone">
-  <div class="speaker">
-    <span></span><span></span><span></span><span></span><span></span>
+
+  <!-- Top cap -->
+  <div class="phone-top">
+    <div class="earpiece"></div>
+    <div class="nokia-logo">Nokia</div>
   </div>
 
+  <!-- Screen -->
   <div class="screen-bezel">
     <div class="screen" id="screen">
       <div class="hud">
-        <span id="score-label">SCORE: <span id="score">0</span></span>
-        <span id="level-label">LVL: <span id="level">1</span></span>
-        <span id="hi-label">HI: <span id="hi">0</span></span>
+        <span>SCORE: <span id="score">0</span></span>
+        <span>LVL <span id="level">1</span></span>
+        <span>HI: <span id="hi">0</span></span>
       </div>
       <canvas id="canvas"></canvas>
 
       <div class="overlay" id="overlay">
-        <h1>🐍 Víbora</h1>
-        <div class="sub">Presiona ▶ o el centro<br>para comenzar</div>
-        <div class="sub" style="font-size:9px;margin-top:4px;">
-          También podés deslizar en la pantalla
+        <h1>Snake</h1>
+        <div class="sub">Presioná OK para<br>comenzar a jugar</div>
+        <div class="sub" style="font-size:8px;color:#3a5000;margin-top:2px;">
+          Deslizá en pantalla<br>o usá el joystick
         </div>
       </div>
     </div>
   </div>
 
+  <!-- Keypad -->
   <div class="keypad">
-    <div class="dpad">
-      <button class="btn btn-up"    id="bUp">▲</button>
-      <button class="btn btn-left"  id="bLeft">◀</button>
-      <button class="btn btn-ok"    id="bOk">▶</button>
-      <button class="btn btn-right" id="bRight">▶</button>
-      <button class="btn btn-down"  id="bDown">▼</button>
+
+    <!-- Soft keys -->
+    <div class="soft-row">
+      <button class="soft-btn" id="bMenu">MENÚ</button>
+      <button class="soft-btn" id="bPause">⏸ PAUSA</button>
     </div>
-    <div class="num-row">
-      <button class="btn btn-num" id="bSlow">🐢</button>
-      <button class="btn btn-num" id="bPause">⏸</button>
-      <button class="btn btn-num" id="bFast">🐇</button>
+
+    <!-- Navigation cross -->
+    <div class="nav-area">
+      <div class="nav-cross">
+        <button class="nav-btn nav-up"    id="bUp">▲</button>
+        <button class="nav-btn nav-left"  id="bLeft">◀</button>
+        <button class="nav-ok"            id="bOk">OK</button>
+        <button class="nav-btn nav-right" id="bRight">▶</button>
+        <button class="nav-btn nav-down"  id="bDown">▼</button>
+      </div>
     </div>
+
+    <!-- Call keys -->
+    <div class="call-row">
+      <button class="call-btn btn-call" id="bCall">📞</button>
+      <button class="call-btn btn-end"  id="bEnd">📵</button>
+    </div>
+
+    <!-- Numeric keypad -->
+    <div class="numpad">
+      <button class="num-btn" data-key="1">1</button>
+      <button class="num-btn" data-key="2" id="b2">2<br><span class="sub-letters">ABC ▲</span></button>
+      <button class="num-btn" data-key="3">3<br><span class="sub-letters">DEF</span></button>
+      <button class="num-btn" data-key="4" id="b4">4<br><span class="sub-letters">GHI ◀</span></button>
+      <button class="num-btn" data-key="5">5<br><span class="sub-letters">JKL</span></button>
+      <button class="num-btn" data-key="6" id="b6">6<br><span class="sub-letters">MNO ▶</span></button>
+      <button class="num-btn" data-key="7">7<br><span class="sub-letters">PQRS</span></button>
+      <button class="num-btn" data-key="8" id="b8">8<br><span class="sub-letters">TUV ▼</span></button>
+      <button class="num-btn" data-key="9">9<br><span class="sub-letters">WXYZ</span></button>
+      <button class="num-btn special" data-key="*">＊</button>
+      <button class="num-btn" data-key="0">0<br><span class="sub-letters">+</span></button>
+      <button class="num-btn special" data-key="#">＃</button>
+    </div>
+
   </div>
-  <div class="hs-label" id="hs-label">HIGH SCORE: <span id="hi2">0</span></div>
+
+  <div class="nokia-bottom">NOKIA</div>
 </div>
 
 <script>
 (() => {
-  // ── Grid config ──────────────────────────────────────────
-  const COLS = 21, ROWS = 18;
-  const CELL = 13; // px per cell on the canvas
+  // ── Grid ─────────────────────────────────────────────────
+  const COLS = 20, ROWS = 16;
+  const CELL = 13;
 
   const canvas = document.getElementById('canvas');
   const ctx    = canvas.getContext('2d');
   canvas.width  = COLS * CELL;
   canvas.height = ROWS * CELL;
 
-  // Colors — Nokia greenish palette
+  // Nokia green palette
   const C = {
-    bg:       '#8fa67a',
-    grid:     '#839b70',
-    snake:    '#1e2e0e',
-    snakeEye: '#8fa67a',
-    food:     '#1e2e0e',
-    foodDot:  '#8fa67a',
-    wall:     '#2a3a1a',
-    text:     '#1e2e0e',
+    bg:       '#8bac0f',
+    grid:     '#82a20c',
+    snake:    '#0f380f',
+    snakeHL:  '#306230',
+    food:     '#0f380f',
+    text:     '#0f380f',
   };
 
   // ── State ─────────────────────────────────────────────────
-  let snake, dir, nextDir, food, score, hiScore, level, speed;
-  let gameState = 'idle'; // idle | running | paused | dead
+  let snake, dir, nextDir, food, score, hiScore, level;
+  let gameState = 'idle';
   let tickTimer = null;
 
-  const SPEEDS = [200, 160, 130, 105, 85, 68, 55]; // ms per tick per level
+  const SPEEDS = [220, 175, 140, 112, 90, 72, 58, 46];
 
-  function getSpeed() {
-    return SPEEDS[Math.min(level - 1, SPEEDS.length - 1)];
-  }
+  function getSpeed() { return SPEEDS[Math.min(level - 1, SPEEDS.length - 1)]; }
 
-  function loadHi() {
-    return parseInt(localStorage.getItem('snakeHi') || '0', 10);
-  }
-  function saveHi(v) {
-    localStorage.setItem('snakeHi', v);
-  }
+  function loadHi() { return parseInt(localStorage.getItem('nokiaSnakeHi') || '0', 10); }
+  function saveHi(v) { localStorage.setItem('nokiaSnakeHi', v); }
 
   hiScore = loadHi();
   updateHiDisplay();
 
-  // ── Init / Reset ──────────────────────────────────────────
+  // ── Init ──────────────────────────────────────────────────
   function init() {
     const cx = Math.floor(COLS / 2), cy = Math.floor(ROWS / 2);
-    snake   = [{x: cx, y: cy}, {x: cx-1, y: cy}, {x: cx-2, y: cy}];
-    dir     = {x: 1, y: 0};
-    nextDir = {x: 1, y: 0};
+    snake   = [{x:cx,y:cy},{x:cx-1,y:cy},{x:cx-2,y:cy}];
+    dir     = {x:1, y:0};
+    nextDir = {x:1, y:0};
     score   = 0;
     level   = 1;
     placeFood();
-    updateScoreDisplay();
+    updateHUD();
   }
 
   function placeFood() {
-    const occupied = new Set(snake.map(s => `${s.x},${s.y}`));
+    const occ = new Set(snake.map(s => `${s.x},${s.y}`));
     let f;
-    do {
-      f = {x: rnd(0, COLS-1), y: rnd(0, ROWS-1)};
-    } while (occupied.has(`${f.x},${f.y}`));
+    do { f = {x: rnd(0,COLS-1), y: rnd(0,ROWS-1)}; }
+    while (occ.has(`${f.x},${f.y}`));
     food = f;
   }
 
-  function rnd(a, b) {
-    return Math.floor(Math.random() * (b - a + 1)) + a;
-  }
+  function rnd(a,b) { return Math.floor(Math.random()*(b-a+1))+a; }
 
-  // ── Game loop ─────────────────────────────────────────────
+  // ── Loop ──────────────────────────────────────────────────
   function startLoop() {
     clearInterval(tickTimer);
     tickTimer = setInterval(tick, getSpeed());
@@ -306,117 +504,101 @@
 
   function tick() {
     if (gameState !== 'running') return;
-
     dir = nextDir;
-    const head = {x: snake[0].x + dir.x, y: snake[0].y + dir.y};
-
-    // Wall collision — wrap around
-    head.x = (head.x + COLS) % COLS;
-    head.y = (head.y + ROWS) % ROWS;
-
-    // Self collision
-    if (snake.some(s => s.x === head.x && s.y === head.y)) {
-      die();
-      return;
-    }
-
+    const head = {
+      x: (snake[0].x + dir.x + COLS) % COLS,
+      y: (snake[0].y + dir.y + ROWS) % ROWS,
+    };
+    if (snake.some(s => s.x === head.x && s.y === head.y)) { die(); return; }
     snake.unshift(head);
-
     if (head.x === food.x && head.y === food.y) {
       score++;
       level = Math.floor(score / 5) + 1;
-      startLoop(); // reset timer for new speed
-      placeFood();
-      updateScoreDisplay();
       if (score > hiScore) { hiScore = score; saveHi(hiScore); updateHiDisplay(); }
+      placeFood();
+      updateHUD();
+      startLoop();
     } else {
       snake.pop();
     }
-
     draw();
   }
 
   function die() {
     gameState = 'dead';
     clearInterval(tickTimer);
-    drawDead();
-    showOverlay('dead');
+    blinkDead(3);
   }
 
-  // ── Drawing ───────────────────────────────────────────────
+  function blinkDead(times) {
+    draw();
+    if (times <= 0) { showOverlay('dead'); return; }
+    ctx.fillStyle = 'rgba(139,172,15,.5)';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    setTimeout(() => { draw(); setTimeout(() => blinkDead(times-1), 180); }, 180);
+  }
+
+  // ── Draw ──────────────────────────────────────────────────
   function draw() {
     ctx.fillStyle = C.bg;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0,0,canvas.width,canvas.height);
 
-    // subtle grid
+    // grid
     ctx.strokeStyle = C.grid;
-    ctx.lineWidth = 0.3;
-    for (let x = 0; x <= COLS; x++) { ctx.beginPath(); ctx.moveTo(x*CELL,0); ctx.lineTo(x*CELL,canvas.height); ctx.stroke(); }
-    for (let y = 0; y <= ROWS; y++) { ctx.beginPath(); ctx.moveTo(0,y*CELL); ctx.lineTo(canvas.width,y*CELL); ctx.stroke(); }
+    ctx.lineWidth = 0.4;
+    for (let x=0; x<=COLS; x++) { ctx.beginPath(); ctx.moveTo(x*CELL,0); ctx.lineTo(x*CELL,canvas.height); ctx.stroke(); }
+    for (let y=0; y<=ROWS; y++) { ctx.beginPath(); ctx.moveTo(0,y*CELL); ctx.lineTo(canvas.width,y*CELL); ctx.stroke(); }
 
-    // food — filled square with dot
+    // food — classic Nokia square with inner dot
     drawFood();
 
-    // snake
-    for (let i = 0; i < snake.length; i++) {
-      drawSegment(snake[i], i === 0);
-    }
+    // snake body
+    for (let i = snake.length-1; i >= 0; i--) drawSegment(snake[i], i===0);
   }
 
   function drawSegment(seg, isHead) {
-    const x = seg.x * CELL + 1, y = seg.y * CELL + 1;
-    const s = CELL - 2;
+    const x = seg.x*CELL, y = seg.y*CELL;
     ctx.fillStyle = C.snake;
-    ctx.fillRect(x, y, s, s);
+    ctx.fillRect(x+1, y+1, CELL-2, CELL-2);
+
+    // highlight top-left (plastic look)
+    ctx.fillStyle = C.snakeHL;
+    ctx.fillRect(x+2, y+2, 2, 1);
+    ctx.fillRect(x+2, y+2, 1, 2);
 
     if (isHead) {
       // eyes
-      ctx.fillStyle = C.snakeEye;
-      const ex = dir.x === 1 ? x+s-3 : dir.x === -1 ? x+1 : null;
-      const ey = dir.y === 1 ? y+s-3 : dir.y === -1 ? y+1 : null;
-      const ex2 = ex, ey2 = ey;
-
-      if (dir.x !== 0) {
-        ctx.fillRect(ex ?? x+2, y+2, 2, 2);
-        ctx.fillRect(ex2 ?? x+2, y+s-4, 2, 2);
-      } else {
-        ctx.fillRect(x+2, ey ?? y+2, 2, 2);
-        ctx.fillRect(x+s-4, ey2 ?? y+2, 2, 2);
-      }
+      ctx.fillStyle = C.bg;
+      const h = CELL - 2;
+      if (dir.x === 1)       { ctx.fillRect(x+h-1,y+3,2,2); ctx.fillRect(x+h-1,y+h-3,2,2); }
+      else if (dir.x === -1) { ctx.fillRect(x+2,y+3,2,2);   ctx.fillRect(x+2,y+h-3,2,2);   }
+      else if (dir.y === -1) { ctx.fillRect(x+3,y+2,2,2);   ctx.fillRect(x+h-3,y+2,2,2);   }
+      else                   { ctx.fillRect(x+3,y+h-1,2,2); ctx.fillRect(x+h-3,y+h-1,2,2); }
     }
   }
 
   function drawFood() {
-    const x = food.x * CELL + 2, y = food.y * CELL + 2;
-    const s = CELL - 4;
+    const x = food.x*CELL, y = food.y*CELL;
     ctx.fillStyle = C.food;
-    ctx.fillRect(x, y, s, s);
-    ctx.fillStyle = C.foodDot;
-    const mid = Math.floor(s/2);
-    ctx.fillRect(x+mid-1, y+mid-1, 2, 2);
-  }
-
-  function drawDead() {
-    draw();
-    ctx.fillStyle = 'rgba(143,166,122,.6)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = C.text;
-    ctx.font = `bold ${CELL+2}px 'Courier New'`;
-    ctx.textAlign = 'center';
-    ctx.fillText('GAME OVER', canvas.width/2, canvas.height/2);
+    ctx.fillRect(x+2,y+2,CELL-4,CELL-4);
+    // inner hollow
+    ctx.fillStyle = C.bg;
+    ctx.fillRect(x+4,y+4,CELL-8,CELL-8);
+    ctx.fillStyle = C.food;
+    const m = Math.floor(CELL/2);
+    ctx.fillRect(x+m-1,y+m-1,2,2);
   }
 
   // ── HUD ───────────────────────────────────────────────────
-  function updateScoreDisplay() {
-    document.getElementById('score').textContent  = score;
-    document.getElementById('level').textContent  = level;
+  function updateHUD() {
+    document.getElementById('score').textContent = score;
+    document.getElementById('level').textContent = level;
   }
   function updateHiDisplay() {
-    document.getElementById('hi').textContent  = hiScore;
-    document.getElementById('hi2').textContent = hiScore;
+    document.getElementById('hi').textContent = hiScore;
   }
 
-  // ── Overlay ───────────────────────────────────────────────
+  // ── Overlays ──────────────────────────────────────────────
   const overlay = document.getElementById('overlay');
 
   function showOverlay(type) {
@@ -424,113 +606,100 @@
     overlay.innerHTML = '';
     if (type === 'start') {
       overlay.innerHTML = `
-        <h1>🐍 Víbora</h1>
-        <div class="sub">Presiona ▶ o el centro<br>para comenzar</div>
-        <div class="sub" style="font-size:9px;margin-top:4px;">También podés deslizar en la pantalla</div>`;
+        <h1>Snake</h1>
+        <div class="sub">Presioná OK para<br>comenzar a jugar</div>
+        <div class="sub" style="font-size:8px;color:#3a5000;margin-top:2px;">Deslizá en pantalla<br>o usá el joystick</div>`;
     } else if (type === 'dead') {
+      const rec = score > 0 && score === hiScore;
       overlay.innerHTML = `
-        <h1>FIN</h1>
+        <h1>Game Over</h1>
         <div class="score-big">${score}</div>
-        <div class="sub">Puntaje${score > 0 && score === hiScore ? ' 🏆 ¡Récord!' : ''}</div>
-        <div class="sub" style="margin-top:6px;">Presioná el centro para jugar de nuevo</div>`;
+        ${rec ? '<div class="record">🏆 ¡Nuevo récord!</div>' : ''}
+        <div class="sub" style="margin-top:4px;">Récord: ${hiScore}</div>
+        <div class="sub" style="margin-top:6px;font-size:8px;">OK = jugar de nuevo</div>`;
     } else if (type === 'pause') {
-      overlay.innerHTML = `<h1>PAUSA</h1><div class="sub">Presioná ⏸ para continuar</div>`;
+      overlay.innerHTML = `<h1>Pausa</h1><div class="sub">OK o ⏸ para continuar</div>`;
     }
   }
+  function hideOverlay() { overlay.style.display = 'none'; }
 
-  function hideOverlay() {
-    overlay.style.display = 'none';
-  }
-
-  // ── Controls ──────────────────────────────────────────────
+  // ── Actions ───────────────────────────────────────────────
   function tryStart() {
     if (gameState === 'idle' || gameState === 'dead') {
-      init();
-      gameState = 'running';
-      hideOverlay();
-      startLoop();
-      draw();
+      init(); gameState = 'running'; hideOverlay(); startLoop(); draw();
     } else if (gameState === 'paused') {
-      gameState = 'running';
-      hideOverlay();
-      startLoop();
+      gameState = 'running'; hideOverlay(); startLoop();
     }
   }
 
   function togglePause() {
     if (gameState === 'running') {
-      gameState = 'paused';
-      clearInterval(tickTimer);
-      showOverlay('pause');
+      gameState = 'paused'; clearInterval(tickTimer); showOverlay('pause');
     } else if (gameState === 'paused') {
-      gameState = 'running';
-      hideOverlay();
-      startLoop();
+      gameState = 'running'; hideOverlay(); startLoop();
     }
   }
 
   function setDir(dx, dy) {
-    // prevent reversing
     if (dx === -dir.x && dy === -dir.y) return;
-    nextDir = {x: dx, y: dy};
+    nextDir = {x:dx, y:dy};
     if (gameState !== 'running') tryStart();
   }
 
-  // Keyboard
+  // ── Keyboard ──────────────────────────────────────────────
   document.addEventListener('keydown', e => {
-    switch(e.key) {
-      case 'ArrowUp':    case 'w': case 'W': e.preventDefault(); setDir(0,-1); break;
-      case 'ArrowDown':  case 's': case 'S': e.preventDefault(); setDir(0, 1); break;
-      case 'ArrowLeft':  case 'a': case 'A': e.preventDefault(); setDir(-1,0); break;
-      case 'ArrowRight': case 'd': case 'D': e.preventDefault(); setDir(1, 0); break;
-      case 'Enter': case ' ':                e.preventDefault(); tryStart();   break;
-      case 'p': case 'P':                    e.preventDefault(); togglePause(); break;
+    const k = e.key;
+    if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(k)) e.preventDefault();
+    switch(k) {
+      case 'ArrowUp':    case 'w': setDir(0,-1);  break;
+      case 'ArrowDown':  case 's': setDir(0, 1);  break;
+      case 'ArrowLeft':  case 'a': setDir(-1,0);  break;
+      case 'ArrowRight': case 'd': setDir(1, 0);  break;
+      case 'Enter':      case ' ': tryStart();     break;
+      case 'p':                    togglePause();  break;
     }
   });
 
-  // D-pad buttons
+  // ── Buttons ───────────────────────────────────────────────
   document.getElementById('bUp').addEventListener('click',    () => setDir(0,-1));
   document.getElementById('bDown').addEventListener('click',  () => setDir(0, 1));
   document.getElementById('bLeft').addEventListener('click',  () => setDir(-1,0));
   document.getElementById('bRight').addEventListener('click', () => setDir(1, 0));
   document.getElementById('bOk').addEventListener('click',    tryStart);
   document.getElementById('bPause').addEventListener('click', togglePause);
-
-  // Speed buttons
-  document.getElementById('bSlow').addEventListener('click', () => {
-    if (level > 1) { level--; updateScoreDisplay(); if (gameState==='running') startLoop(); }
+  document.getElementById('bMenu').addEventListener('click',  togglePause);
+  document.getElementById('bCall').addEventListener('click',  tryStart);
+  document.getElementById('bEnd').addEventListener('click',   () => {
+    if (gameState === 'running' || gameState === 'paused') {
+      gameState = 'dead'; clearInterval(tickTimer); showOverlay('dead');
+    }
   });
-  document.getElementById('bFast').addEventListener('click', () => {
-    if (level < SPEEDS.length) { level++; updateScoreDisplay(); if (gameState==='running') startLoop(); }
-  });
 
-  // Touch swipe on canvas
-  let touchStart = null;
-  const screen = document.getElementById('screen');
+  // Numeric keys 2/4/6/8 = directions (classic Nokia mapping)
+  document.getElementById('b2').addEventListener('click', () => setDir(0,-1));
+  document.getElementById('b4').addEventListener('click', () => setDir(-1,0));
+  document.getElementById('b6').addEventListener('click', () => setDir(1, 0));
+  document.getElementById('b8').addEventListener('click', () => setDir(0, 1));
 
-  screen.addEventListener('touchstart', e => {
+  // ── Swipe on screen ───────────────────────────────────────
+  let t0 = null;
+  const scr = document.getElementById('screen');
+  scr.addEventListener('touchstart', e => { e.preventDefault(); t0 = {x:e.touches[0].clientX,y:e.touches[0].clientY}; }, {passive:false});
+  scr.addEventListener('touchend', e => {
     e.preventDefault();
-    touchStart = {x: e.touches[0].clientX, y: e.touches[0].clientY};
-  }, {passive: false});
+    if (!t0) return;
+    const dx = e.changedTouches[0].clientX - t0.x;
+    const dy = e.changedTouches[0].clientY - t0.y;
+    t0 = null;
+    if (Math.abs(dx) < 12 && Math.abs(dy) < 12) { tryStart(); return; }
+    if (Math.abs(dx) > Math.abs(dy)) setDir(dx>0?1:-1, 0);
+    else                              setDir(0, dy>0?1:-1);
+  }, {passive:false});
 
-  screen.addEventListener('touchend', e => {
-    e.preventDefault();
-    if (!touchStart) return;
-    const dx = e.changedTouches[0].clientX - touchStart.x;
-    const dy = e.changedTouches[0].clientY - touchStart.y;
-    touchStart = null;
-    const absDx = Math.abs(dx), absDy = Math.abs(dy);
-    const threshold = 15;
-    if (absDx < threshold && absDy < threshold) { tryStart(); return; }
-    if (absDx > absDy) { setDir(dx > 0 ? 1 : -1, 0); }
-    else               { setDir(0, dy > 0 ? 1 : -1); }
-  }, {passive: false});
-
-  // ── Initial draw ──────────────────────────────────────────
+  // ── Boot ──────────────────────────────────────────────────
   init();
   draw();
   showOverlay('start');
-
 })();
 </script>
 </body>
